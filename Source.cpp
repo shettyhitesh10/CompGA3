@@ -9,8 +9,25 @@ int drag = 0;//to know the point being dragged (it treats overlapping points as 
 vector<int> overlaps;
 
 vector<vector<float>> points;
-int c = 0;//counter for number of points
+int c = 0;//counter for number of points index
+int counter = 0;//actual counter
 bool check = true;
+
+int factorial(int n)
+{
+    if (n <= 1)
+        return(1);
+    else
+        n = n * factorial(n - 1);
+    return n;
+}
+
+float binomial_coff(float n, float k)
+{
+    float ans;
+    ans = factorial(n) / (factorial(k) * factorial(n - k));
+    return ans;
+}
 
 void mouse(int button, int state, int mousex, int mousey)
 {
@@ -27,6 +44,7 @@ void mouse(int button, int state, int mousex, int mousey)
             points[c].push_back(x);
             points[c].push_back(y);
             c++;
+            counter++;
         }
         int diff = 1;//to avoid loops by adding the same point multiple times
         for (int i = 0; i < c; i++) {
@@ -40,6 +58,7 @@ void mouse(int button, int state, int mousex, int mousey)
             points[c].push_back(x);
             points[c].push_back(y);
             c++;
+            counter++;
         }
 
         
@@ -77,12 +96,16 @@ void mouse(int button, int state, int mousex, int mousey)
         
         x = (mousex / 15) * 15 + 7.5;       //so that the points snap to a grid-like position
         y = 480 - (mousey / 15) * 15 - 7.5; //prevents overlapping points
-
+        int flag = 0;
         for(int i = 1; i < c; i++) {
             if (points[i][0] == x && points[i][1] == y) {//checking if the right click is on a point.
                 points[i][0] = points[i - 1][0];//instead of shifting the whole array, we overlap the deleted point with the previous one
                 points[i][1] = points[i - 1][1];
+                flag = 1;
             }
+        }
+        if (counter > 1 && flag==1) {//flag checks if the waas a point removed and counter contion makes sure nu. of points is > 0
+            counter--;
         }
         r = 0;
         g = 0;
@@ -93,32 +116,55 @@ void mouse(int button, int state, int mousex, int mousey)
     glutPostRedisplay();
 }
 
+void drawBezierGeneralized(vector<vector<float>> p, double t) {
+    float bx1=0, by1=0;
+    if (counter > 0) {
+        bx1 = binomial_coff((float)(counter - 1), 0.0) * pow(t, 0.0) * pow((1 - t), (counter - 1)) * p[0][0];
+        by1 = binomial_coff((float)(counter - 1), 0.0) * pow(t, 0.0) * pow((1 - t), (counter - 1)) * p[0][1];
+    }
+    //float bx2, by2;
+
+    int j=1;//overlap is the root of all problems
+    for (int i = 1; i < c; i++)//have to go till i<c not counter , [[j : couter :: i : c]]
+    {
+        if(p[i-1][0]!=p[i][0] || p[i - 1][1] != p[i][1]){
+        bx1 = bx1 + binomial_coff((float)(counter - 1), (float)j) * pow(t, (double)j) * pow((1 - t), (counter - 1 - j)) * p[i][0];
+        by1 = by1 + binomial_coff((float)(counter - 1), (float)j) * pow(t, (double)j) * pow((1 - t), (counter - 1 - j)) * p[i][1];
+        j++;
+        }
+    }
+    cout << bx1 << " " << by1 << endl << x << y << endl;
+    glColor3f(0, 1, 0);
+    glPointSize(5);
+    glBegin(GL_POINTS);
+    glVertex2f(bx1,by1);
+    glEnd();
+    glFlush();
+
+}
+
 void cursorPos(int x, int y) {//get postion of curson when any of the mouse buttons are pressed(in action eg. draging)
     //cout << x <<" "<< y << endl;
     cx = (x / 15) * 15 + 7.5;
     cy = 480-(y / 15) * 15 - 7.5; 
 }
 
-void drawLine(void) {
+void drawLine() {
     glColor3f(1, 0, 0);
     glPointSize(25);
-    
-    glMatrixMode(GL_PROJECTION);// sets the current matrix to projection
-    glLoadIdentity();//multiply the current matrix by identity matrix
-    gluOrtho2D(0.0, 640.0, 0.0, 480.0);
-
     
     glBegin(GL_LINES);
     for (int i = 1; i < c; i++) {
         glVertex2f(points[i-1][0], points[i-1][1]);
         glVertex2f(points[i][0], points[i][1]);
-    //glVertex2i(50,20);
-    //glVertex2i(150,60);
     }
     glEnd();
+
     glFlush();
+
     cout<<"hello"<<endl;
 }
+
 
 void display(void)
 {
@@ -139,13 +185,20 @@ void display(void)
     }
     glFlush();     // flushes the frame buffer to the screen
     drawLine();
+    for (int i = 0; i < c; i++) {
+        cout << points[i][0]<<"b";
+    }
+    for (float t = 0.0; t <= 1.0; t += 0.02){
+        drawBezierGeneralized(points, t);
+    }
+
     
 }
 
 
 int main(int argc, char** argv)
 {
-    points.resize(1000);
+    points.resize(100);
     glutInit(&argc, argv);
     glutInitWindowSize(640, 480);   //sets the width and height of the window in pixels
     glutInitWindowPosition(10, 10);//sets the position of the window in pixels from top left corner 
