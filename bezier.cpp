@@ -1,3 +1,12 @@
+/*
+Bezier curve
+
+//curve - parts that make the bezier curve with lines
+
+//points - ...with points
+
+*/
+
 #include <iostream>//includes the standard library header file
 #include<vector>
 #include<GL/Glut.h> //includes the opengl, glu, and glut header files
@@ -10,6 +19,8 @@ float cx, cy;
 int drag = 0;
 ///to know the point being dragged (it treats overlapping points as separate otherwise)
 vector<int> overlaps;
+
+float bx0=0, by0=0;//b*0 variables have the last point so as to create the line in bezier curve //curve
 
 vector<vector<float>> points;
 int c = 0;///counter for number of points index
@@ -154,7 +165,10 @@ void drawBezierGeneralized(vector<vector<float>> p, double t) {
         bx1 = binomial_coff((float)(counter - 1), 0.0) * pow(t, 0.0) * pow((1 - t), (counter - 1)) * p[0][0];
         by1 = binomial_coff((float)(counter - 1), 0.0) * pow(t, 0.0) * pow((1 - t), (counter - 1)) * p[0][1];
     }
-    //float bx2, by2;
+    if (bx0==0) {//line from 0,0 to first point
+        bx0 = bx1;
+        by0 = by1; 
+    }
 
     int j=1;//overlap is the root of all problems
     for (int i = 1; i < c; i++)//have to go till i<c not counter , [[j : couter :: i : c]]
@@ -165,14 +179,26 @@ void drawBezierGeneralized(vector<vector<float>> p, double t) {
         j++;
         }
     }
-    cout << c/*bx1 << " " << by1 << endl << x << y */<<counter<< endl;
-    glColor3f(0, 1, 0);
-    glPointSize(5);
-    glBegin(GL_POINTS);
-    glVertex2f(bx1,by1);
-    glEnd();
-    glFlush();
+    //cout << c/*bx1 << " " << by1 << endl << x << y */<<counter<< endl;
 
+    //curve
+    glColor3f(0, 1, 0);
+    glBegin(GL_LINES);
+    glVertex2f(bx0, by0);
+    glVertex2f(bx1, by1);
+    glEnd();
+
+    /* //points
+    glColor3f(0, t, 0);
+    glPointSize(5);
+    cout << j << "*" << bx0 << "*" << bx1 << endl;
+    glBegin(GL_POINTS);
+    glVertex2f(bx1, by1);
+    glEnd();*/
+
+    glFlush();
+    bx0 = bx1;//makes sure b*0 variables have the last point so as to create the line //curve
+    by0 = by1;//curve
 }
 
 ///initiates display
@@ -198,6 +224,8 @@ void display(void)
     for (int i = 0; i < c; i++) {
         cout << points[i][0]<<"b";
     }
+    bx0 = 0;//this is done so as to not start with bx0 as the last point and bx1 as the first creating a circle
+    by0 = 0;//curve
     for (float t = 0.0; t <= 1.0; t += 0.02){
         drawBezierGeneralized(points, t);
     }
