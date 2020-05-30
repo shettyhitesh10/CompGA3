@@ -27,7 +27,7 @@ int c = 0;///counter for number of points index
 int counter = 0;///actual counter
 bool check = true;
 ///returns factorial
-int factorial(int n)
+double factorial(double n)
 {
     if (n <= 1)
         return(1);
@@ -37,10 +37,10 @@ int factorial(int n)
 }
 
 ///returns nCk binomial coefficient
-float binomial_coff(float n, float k)
+double binomial_coff(double n, double k)
 {
-    float ans;
-    ans = factorial(n) / (factorial(k) * factorial(n - k));
+    double ans;
+    ans = factorial(n) / (factorial(k) * factorial(n-k));
     return ans;
 }
 
